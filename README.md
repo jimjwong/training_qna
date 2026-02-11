@@ -9,20 +9,34 @@ A beautiful web application for collecting pre-workshop survey responses with re
 - Three survey questions:
   1. What's your primary role?
   2. How familiar are you with AI?
-  3. What's your biggest hope for this session?
+  3. What's your expected takeaways for this session? (multiple selections allowed)
 - Smooth animations and user-friendly design
 - Success confirmation after submission
 - Mobile responsive
+- Automatic session tracking
 
 ### Trainer Dashboard (`dashboard.html`)
-- Real-time statistics overview
-- Visual charts (doughnut charts) for each question
-- Detailed percentage breakdowns
-- Individual response listings
-- Auto-refresh every 5 seconds
-- Export to CSV functionality
-- Clear data option
-- Session timer
+- **Session Management**
+  - Start new workshop sessions
+  - View all previous sessions
+  - Archive completed sessions automatically
+  - Load any previous session for review
+  - Each session has unique timestamp-based ID
+- **Real-time Statistics**
+  - Total responses count
+  - Last response time
+  - Session timer
+- **Visual Analytics**
+  - Interactive doughnut charts for each question
+  - Detailed percentage breakdowns
+  - Color-coded visualizations
+- **Data Export**
+  - Export current session to CSV
+  - Download session data as JSON file
+  - Export from any previous session
+- **Auto-refresh** every 5 seconds
+- **Individual response listings** with timestamps
+- **Session History** - all previous workshops remain accessible
 
 ## How to Use
 
@@ -35,9 +49,14 @@ A beautiful web application for collecting pre-workshop survey responses with re
 ### For Trainers
 1. Open `dashboard.html` in a web browser
 2. View real-time results as participants submit
-3. Use the "Refresh" button to manually update
-4. Export data to CSV for further analysis
-5. Clear data when starting a new session
+3. **Session Management:**
+   - Click "New Session" to start a fresh workshop (previous data is archived)
+   - Click "View Sessions" to browse all workshop sessions
+   - Load any previous session to review historical data
+   - Download JSON or CSV files for any session
+4. Use the "Refresh" button to manually update
+5. Export current session data to CSV or JSON
+6. All previous workshop sessions remain accessible
 
 ## Running the Application
 
@@ -66,9 +85,18 @@ Then open `http://localhost:8000` in your browser.
 
 ## Data Storage
 
-- Data is stored locally in the browser's `localStorage`
-- All participants on the same device share the same data store
-- For multi-device deployment, consider implementing a backend API
+- **Browser localStorage**: Data is stored locally in the browser for immediate access
+- **Session-based**: Each workshop session has a unique identifier
+- **Persistent**: All sessions are preserved until manually deleted
+- **Downloadable**: Each session can be exported as JSON or CSV files
+- **Multi-device note**: For multi-device deployment (multiple participants on different devices), consider implementing a backend API with database storage
+
+### Session Management
+- Each workshop gets a unique session ID (e.g., `session_2026-02-11T10-30-00`)
+- Starting a new session archives the current one
+- All archived sessions remain accessible via "View Sessions"
+- Delete individual sessions when no longer needed
+- Session data includes: start time, response count, and all participant responses
 
 ## Deployment Options
 
@@ -135,11 +163,18 @@ Edit the HTML files to modify questions and options.
 - Ensure both pages are open in the same browser
 - Check if localStorage is enabled
 - Try refreshing the dashboard
+- Verify you're viewing the correct session
 
 ### Charts not displaying
 - Check internet connection (Chart.js loads from CDN)
 - Ensure JavaScript is enabled
 - Try a different browser
+
+### Session data lost
+- Session data is stored in browser localStorage
+- Clearing browser data will delete all sessions
+- Always download JSON/CSV backups of important sessions
+- Consider exporting data regularly for backup
 
 ## License
 
