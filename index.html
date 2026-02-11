@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SUSS Gen AI Workshop - Pre-Session Survey</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo-section">
+                <h1 class="suss-title">SUSS</h1>
+                <p class="subtitle">Singapore University of Social Sciences</p>
+            </div>
+            <h2 class="workshop-title">Gen AI Workshop</h2>
+            <p class="welcome-text">Let's Start With You</p>
+        </header>
+
+        <form id="surveyForm" class="survey-form">
+            <!-- Question 1 -->
+            <div class="question-block">
+                <div class="question-number">01</div>
+                <h3 class="question-title">What's your primary role?</h3>
+                <div class="options-group">
+                    <label class="option">
+                        <input type="radio" name="role" value="Teacher/Educator/Trainer/Coach" required>
+                        <span class="option-text">Teacher/Educator/Trainer/Coach</span>
+                    </label>
+                    <label class="option">
+                        <input type="radio" name="role" value="Executive/Administrator" required>
+                        <span class="option-text">Executive/Administrator</span>
+                    </label>
+                    <label class="option">
+                        <input type="radio" name="role" value="Support Staff" required>
+                        <span class="option-text">Support Staff</span>
+                    </label>
+                    <label class="option">
+                        <input type="radio" name="role" value="Others" required>
+                        <span class="option-text">Others</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Question 2 -->
+            <div class="question-block">
+                <div class="question-number">02</div>
+                <h3 class="question-title">How familiar are you with AI?</h3>
+                <div class="options-group">
+                    <label class="option">
+                        <input type="radio" name="familiarity" value="Never heard of it" required>
+                        <span class="option-text">Never heard of it</span>
+                    </label>
+                    <label class="option">
+                        <input type="radio" name="familiarity" value="Heard of it" required>
+                        <span class="option-text">Heard of it</span>
+                    </label>
+                    <label class="option">
+                        <input type="radio" name="familiarity" value="Used it before" required>
+                        <span class="option-text">Used it before</span>
+                    </label>
+                    <label class="option">
+                        <input type="radio" name="familiarity" value="Regular user" required>
+                        <span class="option-text">Regular user</span>
+                    </label>
+                    <label class="option">
+                        <input type="radio" name="familiarity" value="Expert user" required>
+                        <span class="option-text">Expert user</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Question 3 -->
+            <div class="question-block">
+                <div class="question-number">03</div>
+                <h3 class="question-title">What's your expected takeaways for this session? <span class="multi-select-hint">(Select all that apply)</span></h3>
+                <div class="options-group">
+                    <label class="option">
+                        <input type="checkbox" name="hope" value="Save time">
+                        <span class="option-text">Save time</span>
+                    </label>
+                    <label class="option">
+                        <input type="checkbox" name="hope" value="Better quality outputs">
+                        <span class="option-text">Better quality outputs</span>
+                    </label>
+                    <label class="option">
+                        <input type="checkbox" name="hope" value="Understand AI">
+                        <span class="option-text">Understand AI</span>
+                    </label>
+                    <label class="option">
+                        <input type="checkbox" name="hope" value="How to replace boring tasks">
+                        <span class="option-text">How to replace boring tasks</span>
+                    </label>
+                    <label class="option">
+                        <input type="checkbox" name="hope" value="How to be relevant">
+                        <span class="option-text">How to be relevant</span>
+                    </label>
+                </div>
+                <div id="hopeError" class="error-message" style="display: none;">Please select at least one option</div>
+            </div>
+
+            <button type="submit" class="submit-btn">Submit Response</button>
+        </form>
+
+        <div id="successMessage" class="success-message" style="display: none;">
+            <div class="success-content">
+                <svg class="success-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                </svg>
+                <h3>Thank you for your response!</h3>
+                <p>Your answers have been recorded.</p>
+            </div>
+        </div>
+
+        <footer>
+            <p class="footer-link">
+                Trainer? <a href="dashboard.html">View Results Dashboard</a>
+            </p>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
