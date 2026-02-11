@@ -5,17 +5,64 @@ let charts = {};
 // Session start time
 const sessionStart = Date.now();
 
+// Initialize storage
+function initializeStorage() {
+    if (!localStorage.getItem('workshopResponses')) {
+        localStorage.setItem('workshopResponses', JSON.stringify([]));
+    }
+    if (!localStorage.getItem('currentSessionId')) {
+        const sessionId = generateSessionId();
+        localStorage.setItem('currentSessionId', sessionId);
+    }
+    if (!localStorage.getItem('workshopSessions')) {
+        localStorage.setItem('workshopSessions', JSON.stringify({}));
+    }
+}
+
+// Generate session ID
+function generateSessionId() {
+    return 'session_' + new Date().toISOString().replace(/[:.]/g, '-');
+}
+
+// Get current session ID
+function getCurrentSessionId() {
+    return localStorage.getItem('currentSessionId');
+}
+
+// Format session name
+function formatSessionName(sessionId) {
+    const parts = sessionId.replace('session_', '').split('T');
+    const date = parts[0];
+    const time = parts[1].split('-').slice(0, 3).join(':');
+    return `${date} ${time}`;
+}
+
 // Initialize dashboard
 function initializeDashboard() {
+    initializeStorage();
+    updateSessionDisplay();
     updateStats();
     updateCharts();
     updateResponseList();
     startSessionTimer();
 }
 
-// Get responses from localStorage
+// Update session display
+function updateSessionDisplay() {
+    const sessionId = getCurrentSessionId();
+    document.getElementById('currentSessionName').textContent = formatSessionName(sessionId);
+}
+
+// Get responses from localStorage (current session only)
 function getResponses() {
-    return JSON.parse(localStorage.getItem('workshopResponses')) || [];
+    const allResponses = JSON.parse(localStorage.getItem('workshopResponses')) || [];
+    const currentSessionId = getCurrentSessionId();
+    return allResponses.filter(r => r.sessionId === currentSessionId);
+}
+
+// Get all sessions
+function getAllSessions() {
+    return JSON.parse(localStorage.getItem('workshopSessions')) || {};
 }
 
 // Update statistics
@@ -229,6 +276,7 @@ function exportToCSV() {
         return;
     }
 
+    const sessionId = getCurrentSessionId();
     const headers = ['Timestamp', 'Primary Role', 'AI Familiarity', 'Expected Takeaways'];
     const rows = responses.map(r => [
         new Date(r.timestamp).toLocaleString(),
@@ -246,17 +294,204 @@ function exportToCSV() {
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `workshop-responses-${new Date().toISOString().split('T')[0]}.csv`;
+    a.download = `workshop-${sessionId}.csv`;
     a.click();
     window.URL.revokeObjectURL(url);
 }
 
-// Clear all data
-function clearData() {
-    if (confirm('Are you sure you want to clear all responses? This action cannot be undone.')) {
-        localStorage.setItem('workshopResponses', JSON.stringify([]));
+// Download JSON for current session
+function downloadSessionJSON() {
+    const sessionId = getCurrentSessionId();
+    const sessions = getAllSessions();
+    const sessionData = sessions[sessionId];
+    
+    if (!sessionData || sessionData.responses.length === 0) {
+        alert('No data to download');
+        return;
+    }
+
+    const json = JSON.stringify(sessionData, null, 2);
+    const blob = new Blob([json], { type: 'application/json' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `workshop-${sessionId}.json`;
+    a.click();
+    window.URL.revokeObjectURL(url);
+}
+
+// Start new session
+function startNewSession() {
+    const currentResponses = getResponses();
+    
+    if (currentResponses.length === 0) {
+        if (!confirm('Current session has no responses. Start a new session anyway?')) {
+            return;
+        }
+    } else {
+        if (!confirm(`Current session has ${currentResponses.length} response(s). Starting a new session will archive the current one. Continue?`)) {
+            return;
+        }
+    }
+
+    // Archive current session
+    const currentSessionId = getCurrentSessionId();
+    const sessions = getAllSessions();
+    
+    if (sessions[currentSessionId]) {
+        sessions[currentSessionId].archived = true;
+        sessions[currentSessionId].archivedAt = new Date().toISOString();
+        localStorage.setItem('workshopSessions', JSON.stringify(sessions));
+    }
+
+    // Create new session
+    const newSessionId = generateSessionId();
+    localStorage.setItem('currentSessionId', newSessionId);
+    
+    // Initialize new session in sessions storage
+    sessions[newSessionId] = {
+        id: newSessionId,
+        startTime: new Date().toISOString(),
+        responses: [],
+        archived: false
+    };
+    localStorage.setItem('workshopSessions', JSON.stringify(sessions));
+
+    // Refresh dashboard
+    initializeDashboard();
+    alert('New session started successfully!');
+}
+
+// View all sessions
+function viewSessions() {
+    const sessions = getAllSessions();
+    const modal = document.getElementById('sessionsModal');
+    const container = document.getElementById('sessionsListContainer');
+    
+    const sessionsList = Object.values(sessions).sort((a, b) => 
+        new Date(b.startTime) - new Date(a.startTime)
+    );
+
+    if (sessionsList.length === 0) {
+        container.innerHTML = '<p style="text-align: center; color: #999;">No sessions found</p>';
+    } else {
+        container.innerHTML = '<div class="sessions-list">' + sessionsList.map(session => {
+            const isActive = session.id === getCurrentSessionId();
+            const startDate = new Date(session.startTime).toLocaleString();
+            const responseCount = session.responses?.length || 0;
+            
+            return `
+                <div class="session-card ${isActive ? 'active' : ''}">
+                    <div class="session-card-header">
+                        <div class="session-title">${formatSessionName(session.id)}</div>
+                        <span class="session-badge ${isActive ? 'active' : 'archived'}">${isActive ? 'Active' : 'Archived'}</span>
+                    </div>
+                    <div class="session-info-row">
+                        <div class="session-info-item">
+                            <div class="session-info-label">Started</div>
+                            <div class="session-info-value">${startDate}</div>
+                        </div>
+                        <div class="session-info-item">
+                            <div class="session-info-label">Responses</div>
+                            <div class="session-info-value">${responseCount}</div>
+                        </div>
+                        ${session.archived ? `
+                        <div class="session-info-item">
+                            <div class="session-info-label">Archived</div>
+                            <div class="session-info-value">${new Date(session.archivedAt).toLocaleString()}</div>
+                        </div>
+                        ` : ''}
+                    </div>
+                    <div class="session-actions">
+                        ${!isActive ? `<button class="session-action-btn" onclick="loadSession('${session.id}')">Load Session</button>` : ''}
+                        <button class="session-action-btn" onclick="downloadSessionData('${session.id}', 'json')">Download JSON</button>
+                        <button class="session-action-btn" onclick="downloadSessionData('${session.id}', 'csv')">Download CSV</button>
+                        ${!isActive ? `<button class="session-action-btn danger" onclick="deleteSession('${session.id}')">Delete</button>` : ''}
+                    </div>
+                </div>
+            `;
+        }).join('') + '</div>';
+    }
+
+    modal.style.display = 'flex';
+}
+
+// Close sessions modal
+function closeSessionsModal() {
+    document.getElementById('sessionsModal').style.display = 'none';
+}
+
+// Load a specific session
+function loadSession(sessionId) {
+    if (confirm('Switch to this session? (Current session will remain in the background)')) {
+        localStorage.setItem('currentSessionId', sessionId);
+        closeSessionsModal();
         initializeDashboard();
     }
+}
+
+// Download session data
+function downloadSessionData(sessionId, format) {
+    const sessions = getAllSessions();
+    const session = sessions[sessionId];
+    
+    if (!session || !session.responses || session.responses.length === 0) {
+        alert('No data to download');
+        return;
+    }
+
+    if (format === 'json') {
+        const json = JSON.stringify(session, null, 2);
+        const blob = new Blob([json], { type: 'application/json' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `workshop-${sessionId}.json`;
+        a.click();
+        window.URL.revokeObjectURL(url);
+    } else if (format === 'csv') {
+        const headers = ['Timestamp', 'Primary Role', 'AI Familiarity', 'Expected Takeaways'];
+        const rows = session.responses.map(r => [
+            new Date(r.timestamp).toLocaleString(),
+            r.role,
+            r.familiarity,
+            Array.isArray(r.hope) ? r.hope.join('; ') : r.hope
+        ]);
+
+        let csv = headers.join(',') + '\n';
+        rows.forEach(row => {
+            csv += row.map(cell => `"${cell}"`).join(',') + '\n';
+        });
+
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `workshop-${sessionId}.csv`;
+        a.click();
+        window.URL.revokeObjectURL(url);
+    }
+}
+
+// Delete session
+function deleteSession(sessionId) {
+    if (confirm('Are you sure you want to delete this session? This action cannot be undone.')) {
+        const sessions = getAllSessions();
+        delete sessions[sessionId];
+        localStorage.setItem('workshopSessions', JSON.stringify(sessions));
+        
+        // Also remove from responses array
+        const allResponses = JSON.parse(localStorage.getItem('workshopResponses')) || [];
+        const filteredResponses = allResponses.filter(r => r.sessionId !== sessionId);
+        localStorage.setItem('workshopResponses', JSON.stringify(filteredResponses));
+        
+        viewSessions(); // Refresh the modal
+    }
+}
+
+// Clear all data
+function clearData() {
+    alert('To clear data, please use the "New Session" button to start fresh, or delete individual sessions from "View Sessions".');
 }
 
 // Auto-refresh
@@ -273,11 +508,18 @@ document.addEventListener('DOMContentLoaded', function() {
     initializeDashboard();
     startAutoRefresh();
 
+    document.getElementById('newSessionBtn').addEventListener('click', startNewSession);
+    document.getElementById('viewSessionsBtn').addEventListener('click', viewSessions);
     document.getElementById('refreshBtn').addEventListener('click', () => {
         initializeDashboard();
     });
-
     document.getElementById('exportBtn').addEventListener('click', exportToCSV);
+    document.getElementById('downloadJsonBtn').addEventListener('click', downloadSessionJSON);
 
-    document.getElementById('clearBtn').addEventListener('click', clearData);
+    // Close modal when clicking outside
+    document.getElementById('sessionsModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeSessionsModal();
+        }
+    });
 });

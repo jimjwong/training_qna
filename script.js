@@ -1,20 +1,62 @@
-// Initialize responses array in localStorage
+// Initialize storage
 function initializeStorage() {
     if (!localStorage.getItem('workshopResponses')) {
         localStorage.setItem('workshopResponses', JSON.stringify([]));
     }
+    if (!localStorage.getItem('currentSessionId')) {
+        const sessionId = generateSessionId();
+        localStorage.setItem('currentSessionId', sessionId);
+    }
+    if (!localStorage.getItem('workshopSessions')) {
+        localStorage.setItem('workshopSessions', JSON.stringify({}));
+    }
+}
+
+// Generate session ID
+function generateSessionId() {
+    return 'session_' + new Date().toISOString().replace(/[:.]/g, '-');
+}
+
+// Get current session ID
+function getCurrentSessionId() {
+    return localStorage.getItem('currentSessionId');
 }
 
 // Save response
 function saveResponse(data) {
     const responses = JSON.parse(localStorage.getItem('workshopResponses')) || [];
+    const sessionId = getCurrentSessionId();
+    
     const responseData = {
         ...data,
         timestamp: new Date().toISOString(),
-        id: Date.now() + Math.random()
+        id: Date.now() + Math.random(),
+        sessionId: sessionId
     };
     responses.push(responseData);
     localStorage.setItem('workshopResponses', JSON.stringify(responses));
+    
+    // Also save to file
+    saveResponseToFile(responseData);
+}
+
+// Save response to downloadable JSON file
+function saveResponseToFile(response) {
+    const sessionId = getCurrentSessionId();
+    const sessions = JSON.parse(localStorage.getItem('workshopSessions')) || {};
+    
+    if (!sessions[sessionId]) {
+        sessions[sessionId] = {
+            id: sessionId,
+            startTime: response.timestamp,
+            responses: []
+        };
+    }
+    
+    sessions[sessionId].responses.push(response);
+    sessions[sessionId].lastUpdated = response.timestamp;
+    
+    localStorage.setItem('workshopSessions', JSON.stringify(sessions));
 }
 
 // Handle form submission
